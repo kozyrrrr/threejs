@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model name</title>
+    <style>
+        body {
+            margin: 0px;
+        }
+
+        .threejs {
+            width: 100%;
+            height: 848px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="threejs"></div>
+    <script src="three.js"></script>
+    <script src="STLloader.js"></script>
+    <script>
+
+        const div = document.querySelector('.threejs');
+
+        window.addEventListener('resize', onWindowResize);
+
+        function onWindowResize() {
+
+            camera.aspect = div.clientWidth / div.clientHeight;
+            camera.updateProjectionMatrix();
+
+            renderer.setSize(div.clientWidth, div.clientHeight);
+
+        }
+        const clock = new THREE.Clock();
+
+        let mesh;
+        const scene = new THREE.Scene();
+
+        const fov = 40;
+        const aspect = 2;
+        const near = 0.1;
+        const far = 50;
+        const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+
+        camera.position.set(200, 4, 150);
+        cameraTarget = new THREE.Vector3(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(div.clientWidth, div.clientHeight);
+
+        div.appendChild(renderer.domElement);
+        renderer.shadowMap.enabled = true;
+
+        scene.background = new THREE.Color('gray');
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff);
+        directionalLight.position.set(-50, 25, -25);
+        directionalLight.castShadow = true;
+
+        directionalLight.shadow.mapSize.width = 1000;
+        directionalLight.shadow.mapSize.height = 5000;
+        directionalLight.shadow.camera.top = 10;
+        directionalLight.shadow.camera.bottom = - 10;
+        directionalLight.shadow.camera.left = - 10;
+        directionalLight.shadow.camera.right = 10;
+        scene.add(directionalLight);
+
+        const light = new THREE.PointLight(0xffffff, 1, 100);
+        light.position.set(1, 4, 1);
+        scene.add(light);
+
+        
+
+        const plane = new THREE.Mesh(
+            new THREE.PlaneGeometry(3, 3),
+            new THREE.MeshPhongMaterial({ color: 0x229999 })
+        );
+        plane.rotation.x = - Math.PI / 2;
+        plane.receiveShadow = true;
+        scene.add(plane);
+
+        const loader = new STLLoader();
+        loader.load('/models/qtip.stl', function (geometry) {
+
+            const material = new THREE.MeshPhongMaterial({ color: "#CCCCCB" });
+            mesh = new THREE.Mesh(geometry, material);
+
+            let box = new THREE.Box3();
+            let size = new THREE.Vector3();
+
+            box.setFromObject(mesh).getSize(size);
+            mesh.scale.set(0.5 / size.y, 1 / size.y, 1 / size.y);
+
+            mesh.position.set(0, 0, 0.4);
+            mesh.rotation.x = 11;
+
+            mesh.castShadow = true;
+            scene.add(mesh);
+    console.log(mesh);
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            render();
+        }
+
+        function render() {
+
+            const elapsedTime = clock.getElapsedTime()
+
+            camera.position.x = Math.cos(elapsedTime * 0.5) * 2.5;
+            camera.position.z = Math.sin(elapsedTime * 0.5) * 2.5;
+
+            camera.lookAt(cameraTarget);
+            renderer.render(scene, camera);
+
+        }
+
+        animate();
+
+    </script>
+
+</body>
+
+</html>
